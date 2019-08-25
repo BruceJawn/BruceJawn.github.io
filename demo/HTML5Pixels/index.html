@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	
+<head>
+  <title>HTML5Pixels</title>
+</head>
+	
+<body>
+
+<canvas id="render"></canvas>
+	
+<script>
+//The requestAnimFrame fallback for better and smoother animation
+window.requestAnimFrame = (function () {
+    return window.requestAnimationFrame || window.webkitRequestAnimationFrame || 
+	window.mozRequestAnimationFrame || window.oRequestAnimationFrame || 
+	window.msRequestAnimationFrame || function (callback) {
+        window.setTimeout(callback, 1000 / 60);
+    };
+})();
+
+//Prepare our canvas
+var canvas = document.querySelector('#render');
+var w = window.innerWidth;
+var h = window.innerHeight;
+canvas.width = w;
+canvas.height = h;
+var ctx = canvas.getContext('2d');
+
+var time = Date.now();//record initial time
+var buffer = ctx.createImageData(w, h);//The back buffer we used to paint the result into the canvas
+
+//The main render function
+//Calculate a color value from elapsed time and [x,y] coordinates (scaled to [0,1])
+function render(time, fragcoord) {
+    /* put the GLSL fragment shader's JavaScript equivalent here. */
+    //begin of per pixel bitmap manipulation
+    var x = fragcoord[0]; var y = fragcoord[1];
+    var red = x;
+    var green = y;
+    var blue = 1/(1+time);
+    var alpha = 1;
+    //end of per pixel bitmap manipulation
+    return [red,green,blue,alpha]; //the final color value (scaled to [0,1])
+};
+
+function animate() {
+    var delta = (Date.now() - time) / 1000;
+    buffer = ctx.createImageData(w, h);
+    ctx.clearRect(0, 0, w, h);
+    for (var x = 0; x < w; x++) {
+        for (var y = 0; y < h; y++) {
+            var ret = render(delta, [x/w, y/h]);
+            var i = (y * buffer.width + x) * 4;
+            buffer.data[i] = ret[0] * 255;//red
+            buffer.data[i + 1] = ret[1] * 255;//green
+            buffer.data[i + 2] = ret[2] * 255;//blue
+            buffer.data[i + 3] = ret[3] * 255;//alpha
+        }
+    }
+    ctx.putImageData(buffer, 0, 0);
+    requestAnimFrame(animate);
+};
+
+window.onresize = function () {
+    w = window.innerWidth;
+    h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+};
+
+animate();
+</script>
+
+<noscript>Sorry, your browser does not support JavaScript!</noscript>
+
+</body>
+</html> 
