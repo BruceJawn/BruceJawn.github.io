@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+	
+<head>
+  <title>HTML5Pixelsfast</title>
+</head>
+	
+<body>
+
+<canvas id="render"></canvas>
+	
+<script>
+//The requestAnimFrame fallback for better and smoother animation
+window.requestAnimFrame = (function () {
+    return window.requestAnimationFrame || window.webkitRequestAnimationFrame || 
+	window.mozRequestAnimationFrame || window.oRequestAnimationFrame || 
+	window.msRequestAnimationFrame || function (callback) {
+        window.setTimeout(callback, 1000 / 60);
+    };
+})();
+
+//Prepare our canvas
+var canvas = document.querySelector('#render');
+var w = window.innerWidth;
+var h = window.innerHeight;
+canvas.width = w;
+canvas.height = h;
+var ctx = canvas.getContext('2d');
+
+var time = Date.now();//record initial time
+var buffer = ctx.createImageData(w, h);//The back buffer we used to paint the result into the canvas
+//The main render function
+//Calculate a color value from elapsed time and [x,y] coordinates (scaled to [0,1])
+function render(time, fragcoord) {
+    /* put the GLSL fragment shader's JavaScript equivalent here. */
+    //begin of per pixel bitmap manipulation
+    var x = fragcoord[0]; var y = fragcoord[1];
+    var red = x;
+    var green = y;
+    var blue = 1/(1+time);
+    var alpha = 1;
+    //end of per pixel bitmap manipulation
+    return [red,green,blue,alpha]; //the final color value (scaled to [0,1])
+};
+var buf;
+function animate() {
+    var delta = (Date.now() - time) / 1000;
+    buffer = ctx.createImageData(w, h);
+    //
+    /*
+    Next we create two ArrayBuffer views. 
+    One that allows us to view buf as a one-dimensional array of unsigned 8-bit values 
+    and another that allows us to view buf as a one-dimensional array of unsigned 32-bit values.
+    */
+    buf = new ArrayBuffer(buffer.data.length);
+    var buf8 = new Uint8ClampedArray(buf);//first view for copy pixel data to ImageData
+    var data = new Uint32Array(buf);//second view for setting pixel values
+    //
+    ctx.clearRect(0, 0, w, h);
+    for (var x = 0; x < w; x++) {
+        for (var y = 0; y < h; y++) {
+            var ret = render(delta, [x/w, y/h]);
+            //var i = (y * buffer.width + x) * 4;
+            //buffer.data[i] = ret[0] * 255;//red
+            //buffer.data[i + 1] = ret[1] * 255;//green
+            //buffer.data[i + 2] = ret[2] * 255;//blue
+            //buffer.data[i + 3] = ret[3] * 255;//alpha
+            
+            data[y * w + x] =
+            (ret[3]*255 << 24) |	// alpha
+            (ret[2]*255 << 16) |	// blue
+            (ret[1]*255 <<  8) |	// green
+             ret[0]*255;		// red
+        }
+    }
+    /*
+    now assign the contents of the ArrayBuffer buf to imageData.data. 
+    We use the Uint8ClampedArray.set() method to set the data property 
+    to the Uint8ClampedArray view of our ArrayBuffer by specifying buf8 as the parameter.
+    */
+    buffer.data.set(buf8);
+    //Finally, we use putImageData() to copy the image data back to the canvas.
+    ctx.putImageData(buffer, 0, 0);
+    requestAnimFrame(animate);
+};
+
+window.onresize = function () {
+    w = window.innerWidth;
+    h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+};
+
+animate();
+</script>
+
+<noscript>Sorry, your browser does not support JavaScript!</noscript>
+
+</body>
+</html> 
