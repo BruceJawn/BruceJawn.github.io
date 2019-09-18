@@ -30,7 +30,7 @@ function getQueryVariable(variable)
 var url = getQueryVariable("url");
 var ifrm = document.getElementById("myFrame");
 // assign url
-ifrm.setAttribute("src", url);
+ifrm.setAttribute("src", unescape(url));
 </script>
 
 </body>
