@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	
+<head>
+  <title>HTML5LoadBF</title>
+</head>
+	
+<body>
+
+<canvas id="render"></canvas>
+	
+<script>
+//Prepare our canvas
+var canvas = document.querySelector('#render');
+var w = 800;
+var h = 600;
+canvas.width = w;
+canvas.height = h;
+var ctx = canvas.getContext('2d');
+var buffer = ctx.createImageData(w, h);
+
+//http://qnimate.com/an-introduction-to-javascript-blobs-and-file-interface/
+var xhr = new XMLHttpRequest(); 
+xhr.open("GET", "./example.bf"); 
+//although we can get the remote data directly into an arraybuffer using the string "arraybuffer" assigned to responseType property. For the sake of example we are putting it into a blob and then copying the blob data into an arraybuffer.
+xhr.responseType = "blob";
+
+function analyze_data(blob)
+{
+    var myReader = new FileReader();
+    myReader.readAsArrayBuffer(blob);
+    
+    myReader.addEventListener("loadend", function(e)
+    {
+        var buf = e.srcElement.result;//arraybuffer object
+		console.log(buf)
+        var buf8 = new Uint8ClampedArray(buf);//first view for copy pixel data to ImageData
+        var data = new Uint32Array(buf);//second view for setting pixel values
+        buffer.data.set(buf8);
+        //we use putImageData() to copy the image data back to the canvas.
+        ctx.putImageData(buffer, 0, 0);
+    });
+}
+
+xhr.onload = function() 
+{
+    analyze_data(xhr.response);
+}
+xhr.send();
+</script>
+
+<noscript>Sorry, your browser does not support JavaScript!</noscript>
+
+</body>
+</html> 

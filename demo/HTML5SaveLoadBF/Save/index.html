@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+	
+<head>
+  <title>HTML5SaveBF</title>
+</head>
+	
+<body>
+
+<canvas id="render"></canvas>
+	
+<script>
+//Prepare our canvas
+var canvas = document.querySelector('#render');
+var w = 800;
+var h = 600;
+canvas.width = w;
+canvas.height = h;
+var ctx = canvas.getContext('2d');
+//Draw something
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 60, 60);
+ctx.beginPath();
+ctx.rect(60, 60, 160, 80);
+ctx.fillStyle = "blue";
+ctx.fill();
+ctx.beginPath();
+ctx.lineWidth = "5";
+ctx.strokeStyle = "green";
+ctx.moveTo(6, 160);
+ctx.lineTo(240, 360);
+ctx.lineTo(60, 800);
+ctx.lineTo(800, 60);
+ctx.stroke();//draw
+//Convert canvas draws into pixels
+var buffer = ctx.getImageData(0, 0, w, h);
+
+//https://stackoverflow.com/questions/23451726/saving-binary-data-as-file-using-javascript-from-a-browser
+var saveByteArray = (function () {
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    return function (data, name) {
+        var blob = new Blob(data, {type: "octet/stream"}),
+            url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = name;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+}());
+//Save pixel data (ArrayBuffer) as binary file
+saveByteArray([buffer.data], 'example.bf');
+</script>
+
+<noscript>Sorry, your browser does not support JavaScript!</noscript>
+
+</body>
+</html> 
