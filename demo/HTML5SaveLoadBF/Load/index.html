@@ -33,7 +33,6 @@ function analyze_data(blob)
     myReader.addEventListener("loadend", function(e)
     {
         var buf = e.srcElement.result;//arraybuffer object
-		console.log(buf)
         var buf8 = new Uint8ClampedArray(buf);//first view for copy pixel data to ImageData
         var data = new Uint32Array(buf);//second view for setting pixel values
         buffer.data.set(buf8);
